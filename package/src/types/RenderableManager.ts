@@ -84,6 +84,12 @@ export interface RenderableManager extends PointerHolder {
    */
   createPlane(shadowMaterial: Material, halfExtendX: number, halfExtendY: number, halfExtendZ: number): Entity
 
+  /**
+   * Creates a UV sphere with the material provided. The mesh is centered at the origin.
+   * @worklet
+   */
+  createSphere(material: Material, radius: number, rings: number, sectors: number): Entity
+
   // TODO: document (its fullscreen)
   createImageBackgroundShape(material: Material): Entity
 

@@ -5,3 +5,12 @@
 bullet3/
 .idea/
 node_modules/
+
+# Local SPZ walkthrough assets used for manual experiments.
+# Keep these out of the public fork unless they are replaced by a small,
+# license-clean sample scene.
+examples/Shared/assets/*.spz
+examples/Shared/assets/*collision*
+examples/Shared/assets/character_ball.*
+examples/Shared/assets/spz_gaussian_splat.*
+examples/Shared/src/generated/

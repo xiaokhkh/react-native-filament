@@ -1,0 +1,6 @@
+packages:
+  - examples/AppExampleFabric
+  - examples/ExpoExample
+  - examples/Shared
+  - package
+  - packages/react-native-filament-spz

@@ -17,6 +17,7 @@ export * from './hooks/useRecorderRenderLoop'
 export * from './hooks/useCameraManipulator'
 export * from './hooks/useSyncSharedValue'
 export * from './hooks/useDerivedValue'
+export * from './hooks/useGaussianSplat'
 
 // utilities
 export * from './utilities/getAssetFromModel'
@@ -43,3 +44,4 @@ export * from './react/Skybox'
 export * from './react/FilamentScene'
 export * from './react/BackgroundImage'
 export * from './react/DebugBox'
+export * from './react/GaussianSplat'

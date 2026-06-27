@@ -1,0 +1,19 @@
+{
+  "name": "react-native-filament-spz",
+  "version": "0.0.0",
+  "private": true,
+  "description": "SPZ tooling, collision helpers, and scene utilities for react-native-filament.",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "bin": {
+    "generate-spz-mobile-collision": "bin/generate-spz-mobile-collision.mjs"
+  },
+  "files": [
+    "bin",
+    "src"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "react-native-filament": "workspace:^"
+  }
+}

@@ -14,6 +14,7 @@ import { TFilamentRecorder } from './FilamentRecorder'
 import { SwapChain } from './SwapChain'
 import { NameComponentManager } from './NameComponentManager'
 import { CameraManipulator, OrbitCameraManipulatorConfig } from './CameraManipulator'
+import { GaussianSplatAsset } from './GaussianSplat'
 
 export interface Engine extends PointerHolder {
   setSurfaceProvider(surfaceProvider: SurfaceProvider): void
@@ -33,6 +34,27 @@ export interface Engine extends PointerHolder {
    * It will create multiple instances of the asset.
    */
   loadInstancedAsset(buffer: FilamentBuffer, instanceCount: number): FilamentAsset
+
+  /**
+   * Given a {@linkcode FilamentBuffer} containing a gzip-compressed legacy `.spz` file,
+   * load it as a Gaussian Splat renderable.
+   *
+   * @param maxSplats Optional deterministic downsample limit. Pass `undefined` to render all splats.
+   * @param splatScale Multiplies each Gaussian billboard radius. Defaults to 1.
+   * @param metricScaleFactor Multiplies SPZ positions/radii into world units. Defaults to 1.
+   * @param groundPlaneOffset Adds a world-space Y offset after scaling/flipping. Defaults to 0.
+   * @param flipY Applies the World Labs/Image Blast 180deg X flip. Defaults to false.
+   * @worklet
+   */
+  loadSpz(
+    buffer: FilamentBuffer,
+    materialBuffer: FilamentBuffer,
+    maxSplats: number | undefined,
+    splatScale: number | undefined,
+    metricScaleFactor: number | undefined,
+    groundPlaneOffset: number | undefined,
+    flipY: boolean | undefined
+  ): GaussianSplatAsset
 
   /**
    * Set the indirect light for the scene.

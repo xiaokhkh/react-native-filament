@@ -9,3 +9,7 @@ declare module '*.glb' {
 declare module '*.filamat' {
   export default number
 }
+
+declare module '*.spz' {
+  export default number
+}

@@ -39,6 +39,7 @@ void EngineWrapper::loadHybridMethods() {
   registerHybridMethod("setIndirectLight", &EngineWrapper::setIndirectLight, this);
   registerHybridMethod("loadAsset", &EngineWrapper::loadAsset, this);
   registerHybridMethod("loadInstancedAsset", &EngineWrapper::loadInstancedAsset, this);
+  registerHybridMethod("loadSpz", &EngineWrapper::loadSpz, this);
   registerHybridMethod("getScene", &EngineWrapper::getScene, this);
   registerHybridMethod("getView", &EngineWrapper::getView, this);
   registerHybridMethod("getCamera", &EngineWrapper::getCamera, this);
@@ -104,6 +105,13 @@ std::shared_ptr<FilamentAssetWrapper> EngineWrapper::loadAsset(std::shared_ptr<F
 }
 std::shared_ptr<FilamentAssetWrapper> EngineWrapper::loadInstancedAsset(std::shared_ptr<FilamentBuffer> modelBuffer, int instanceCount) {
   return pointee()->loadInstancedAsset(modelBuffer, instanceCount);
+}
+std::shared_ptr<GaussianSplatWrapper> EngineWrapper::loadSpz(std::shared_ptr<FilamentBuffer> spzBuffer,
+                                                             std::shared_ptr<FilamentBuffer> materialBuffer,
+                                                             std::optional<int> maxSplats, std::optional<double> splatScale,
+                                                             std::optional<double> metricScaleFactor,
+                                                             std::optional<double> groundPlaneOffset, std::optional<bool> flipY) {
+  return pointee()->loadSpz(spzBuffer, materialBuffer, maxSplats, splatScale, metricScaleFactor, groundPlaneOffset, flipY);
 }
 std::shared_ptr<SceneWrapper> EngineWrapper::getScene() {
   std::shared_ptr<Scene> scene = pointee()->_scene;

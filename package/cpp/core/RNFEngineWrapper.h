@@ -10,6 +10,7 @@
 #include "RNFChoreographer.h"
 #include "RNFFilamentAssetWrapper.h"
 #include "RNFFilamentBuffer.h"
+#include "RNFGaussianSplatWrapper.h"
 #include "RNFRenderableManagerWrapper.h"
 #include "RNFRendererWrapper.h"
 #include "RNFSceneWrapper.h"
@@ -68,6 +69,10 @@ private: // Exposed public JS API
   void setIndirectLight(std::shared_ptr<FilamentBuffer> modelBuffer, std::optional<double> intensity, std::optional<int> irradianceBands);
   std::shared_ptr<FilamentAssetWrapper> loadAsset(std::shared_ptr<FilamentBuffer> modelBuffer);
   std::shared_ptr<FilamentAssetWrapper> loadInstancedAsset(std::shared_ptr<FilamentBuffer> modelBuffer, int instanceCount);
+  std::shared_ptr<GaussianSplatWrapper> loadSpz(std::shared_ptr<FilamentBuffer> spzBuffer,
+                                                std::shared_ptr<FilamentBuffer> materialBuffer, std::optional<int> maxSplats,
+                                                std::optional<double> splatScale, std::optional<double> metricScaleFactor,
+                                                std::optional<double> groundPlaneOffset, std::optional<bool> flipY);
   std::shared_ptr<SceneWrapper> getScene();
   std::shared_ptr<ViewWrapper> getView();
   std::shared_ptr<CameraWrapper> getCamera();

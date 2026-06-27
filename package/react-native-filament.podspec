@@ -164,6 +164,7 @@ Pod::Spec.new do |s|
   s.dependency "react-native-worklets-core"
   
   s.ios.frameworks = 'AVFoundation', 'CoreMedia'
+  s.libraries = 'z'
 
   if defined?($RNFExcludeAssets) && $RNFExcludeAssets == true
     Pod::UI.puts "[react-native-filament] Excluding assets!"

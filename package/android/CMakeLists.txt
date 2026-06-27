@@ -51,6 +51,8 @@ add_library(
     ../cpp/core/RNFEngineImpl.Skybox.cpp
     ../cpp/core/RNFEngineWrapper.cpp
     ../cpp/core/RNFEngineConfigHelper.cpp
+    ../cpp/core/RNFSpzDecoder.cpp
+    ../cpp/core/RNFGaussianSplatWrapper.cpp
     ../cpp/core/RNFSceneWrapper.cpp
     ../cpp/core/RNFCameraWrapper.cpp
     ../cpp/core/RNFViewWrapper.cpp
@@ -125,6 +127,7 @@ target_link_libraries(
     fbjni::fbjni # <-- fbjni
     GLESv3 # <-- OpenGL (Core)
     EGL # <-- OpenGL (EGL)
+    z # <-- zlib for gzip-compressed legacy SPZ assets
 )
 
 # This if-then-else can be removed once this library does not support version below 0.76

@@ -10,6 +10,7 @@
 #include "RNFFilamentAssetWrapper.h"
 #include "RNFFilamentBuffer.h"
 #include "RNFFilamentRecorder.h"
+#include "RNFGaussianSplatWrapper.h"
 #include "RNFLightManagerWrapper.h"
 #include "RNFMaterialWrapper.h"
 #include "RNFNameComponentManagerWrapper.h"
@@ -57,6 +58,10 @@ public:
   void setIndirectLight(std::shared_ptr<FilamentBuffer> modelBuffer, std::optional<double> intensity, std::optional<int> irradianceBands);
   std::shared_ptr<FilamentAssetWrapper> loadAsset(std::shared_ptr<FilamentBuffer> modelBuffer);
   std::shared_ptr<FilamentAssetWrapper> loadInstancedAsset(std::shared_ptr<FilamentBuffer> modelBuffer, int instanceCount);
+  std::shared_ptr<GaussianSplatWrapper> loadSpz(std::shared_ptr<FilamentBuffer> spzBuffer,
+                                                std::shared_ptr<FilamentBuffer> materialBuffer, std::optional<int> maxSplats,
+                                                std::optional<double> splatScale, std::optional<double> metricScaleFactor,
+                                                std::optional<double> groundPlaneOffset, std::optional<bool> flipY);
   std::shared_ptr<LightManagerWrapper> createLightManager();
   std::shared_ptr<RenderableManagerWrapper> createRenderableManager();
   std::shared_ptr<TransformManagerWrapper> createTransformManager();

@@ -245,6 +245,17 @@ std::shared_ptr<FilamentAssetWrapper> EngineImpl::loadInstancedAsset(std::shared
   return makeAssetWrapper(assetPtr);
 }
 
+std::shared_ptr<GaussianSplatWrapper> EngineImpl::loadSpz(std::shared_ptr<FilamentBuffer> spzBuffer,
+                                                          std::shared_ptr<FilamentBuffer> materialBuffer, std::optional<int> maxSplats,
+                                                          std::optional<double> splatScale,
+                                                          std::optional<double> metricScaleFactor,
+                                                          std::optional<double> groundPlaneOffset, std::optional<bool> flipY) {
+  std::unique_lock lock(_mutex);
+  auto splat = std::make_shared<GaussianSplatResource>(_engine, _rendererDispatcher, _scene, spzBuffer, materialBuffer, maxSplats, splatScale,
+                                                       metricScaleFactor, groundPlaneOffset, flipY);
+  return std::make_shared<GaussianSplatWrapper>(splat);
+}
+
 std::shared_ptr<FilamentAssetWrapper> EngineImpl::makeAssetWrapper(FilamentAsset* assetPtr) {
   if (assetPtr == nullptr) {
     throw std::runtime_error("Failed to load asset");

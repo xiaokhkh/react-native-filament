@@ -19,6 +19,7 @@ void RenderableManagerWrapper::loadHybridMethods() {
   registerHybridMethod("setCastShadow", &RenderableManagerWrapper::setCastShadow, this);
   registerHybridMethod("setReceiveShadow", &RenderableManagerWrapper::setReceiveShadow, this);
   registerHybridMethod("createPlane", &RenderableManagerWrapper::createPlane, this);
+  registerHybridMethod("createSphere", &RenderableManagerWrapper::createSphere, this);
   registerHybridMethod("createImageBackgroundShape", &RenderableManagerWrapper::createImageBackgroundShape, this);
   registerHybridMethod("scaleBoundingBox", &RenderableManagerWrapper::scaleBoundingBox, this);
   registerHybridMethod("createDebugCubeWireframe", &RenderableManagerWrapper::createDebugCubeWireframe, this);
@@ -55,6 +56,10 @@ void RenderableManagerWrapper::setReceiveShadow(std::shared_ptr<EntityWrapper> e
 std::shared_ptr<EntityWrapper> RenderableManagerWrapper::createPlane(std::shared_ptr<MaterialWrapper> materialWrapper, double halfExtendX,
                                                                      double halfExtendY, double halfExtendZ) {
   return pointee()->createPlane(materialWrapper, halfExtendX, halfExtendY, halfExtendZ);
+}
+std::shared_ptr<EntityWrapper> RenderableManagerWrapper::createSphere(std::shared_ptr<MaterialWrapper> materialWrapper, double radius,
+                                                                      int32_t rings, int32_t sectors) {
+  return pointee()->createSphere(materialWrapper, radius, rings, sectors);
 }
 std::shared_ptr<EntityWrapper> RenderableManagerWrapper::createImageBackgroundShape(std::shared_ptr<MaterialWrapper> materialWrapper) {
   if (materialWrapper == nullptr) {

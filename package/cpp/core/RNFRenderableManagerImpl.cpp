@@ -9,16 +9,37 @@
 #include "VertexEntity.h"
 #include "core/RNFFilamentInstanceWrapper.h"
 
+#include <algorithm>
 #include <cmath>
+#include <vector>
 
 #include <filament/IndexBuffer.h>
 #include <filament/MaterialInstance.h>
+#include <filament/TransformManager.h>
+#include <filament/VertexBuffer.h>
 #include <gltfio/TextureProvider.h>
 #include <math/norm.h>
+#include <utils/EntityManager.h>
 
 namespace margelo {
 using namespace gltfio;
 using namespace math;
+
+namespace {
+
+struct SphereVertex {
+  float3 position;
+};
+
+void releaseSphereVertices(void* buffer, size_t, void*) {
+  delete[] static_cast<SphereVertex*>(buffer);
+}
+
+void releaseSphereIndices(void* buffer, size_t, void*) {
+  delete[] static_cast<uint32_t*>(buffer);
+}
+
+} // namespace
 
 int RenderableManagerImpl::getPrimitiveCount(std::shared_ptr<EntityWrapper> entity) {
   RenderableManager& renderableManager = _engine->getRenderableManager();
@@ -228,6 +249,78 @@ std::shared_ptr<EntityWrapper> RenderableManagerImpl::createPlane(std::shared_pt
       .boundingBox({{0, 0, 0}, {halfExtendX, halfExtendY, halfExtendZ}})
       .material(0, instance->getMaterialInstance())
       .geometry(0, RenderableManager::PrimitiveType::TRIANGLES, vertexBuffer, indexBuffer, 0, 6)
+      .build(*_engine, renderable);
+
+  return std::make_shared<EntityWrapper>(renderable);
+}
+
+std::shared_ptr<EntityWrapper> RenderableManagerImpl::createSphere(std::shared_ptr<MaterialWrapper> materialWrapper, double radius,
+                                                                   int32_t rings, int32_t sectors) {
+  if (materialWrapper == nullptr) {
+    throw std::invalid_argument("Material is null");
+  }
+
+  const float sphereRadius = std::max(0.001f, static_cast<float>(radius));
+  const int32_t ringCount = std::max(4, rings);
+  const int32_t sectorCount = std::max(8, sectors);
+  const uint32_t verticesPerRing = static_cast<uint32_t>(sectorCount + 1);
+  const uint32_t vertexCount = static_cast<uint32_t>(ringCount + 1) * verticesPerRing;
+  const uint32_t indexCount = static_cast<uint32_t>(ringCount * sectorCount * 6);
+
+  auto* vertices = new SphereVertex[vertexCount];
+  auto* indices = new uint32_t[indexCount];
+
+  constexpr float PI = 3.14159265358979323846f;
+  uint32_t vertexIndex = 0;
+  for (int32_t ring = 0; ring <= ringCount; ring++) {
+    const float v = static_cast<float>(ring) / static_cast<float>(ringCount);
+    const float theta = v * PI;
+    const float sinTheta = std::sin(theta);
+    const float cosTheta = std::cos(theta);
+    for (int32_t sector = 0; sector <= sectorCount; sector++) {
+      const float u = static_cast<float>(sector) / static_cast<float>(sectorCount);
+      const float phi = u * 2.0f * PI;
+      vertices[vertexIndex++] = {
+          {sphereRadius * sinTheta * std::cos(phi), sphereRadius * cosTheta, sphereRadius * sinTheta * std::sin(phi)}};
+    }
+  }
+
+  uint32_t index = 0;
+  for (int32_t ring = 0; ring < ringCount; ring++) {
+    for (int32_t sector = 0; sector < sectorCount; sector++) {
+      const uint32_t first = static_cast<uint32_t>(ring) * verticesPerRing + static_cast<uint32_t>(sector);
+      const uint32_t second = first + verticesPerRing;
+      indices[index++] = first;
+      indices[index++] = second;
+      indices[index++] = first + 1;
+      indices[index++] = first + 1;
+      indices[index++] = second;
+      indices[index++] = second + 1;
+    }
+  }
+
+  VertexBuffer* vertexBuffer = VertexBuffer::Builder()
+                                   .vertexCount(vertexCount)
+                                   .bufferCount(1)
+                                   .attribute(VertexAttribute::POSITION, 0, VertexBuffer::AttributeType::FLOAT3, 0, sizeof(SphereVertex))
+                                   .build(*_engine);
+  vertexBuffer->setBufferAt(*_engine, 0,
+                            VertexBuffer::BufferDescriptor(vertices, vertexCount * sizeof(SphereVertex), releaseSphereVertices));
+
+  IndexBuffer* indexBuffer = IndexBuffer::Builder().indexCount(indexCount).build(*_engine);
+  indexBuffer->setBuffer(*_engine, IndexBuffer::BufferDescriptor(indices, indexCount * sizeof(uint32_t), releaseSphereIndices));
+
+  Entity renderable = EntityManager::get().create();
+  _engine->getTransformManager().create(renderable);
+
+  std::shared_ptr<MaterialInstanceWrapper> instance = materialWrapper->getDefaultInstance();
+  RenderableManager::Builder(1)
+      .boundingBox({{0, 0, 0}, {sphereRadius, sphereRadius, sphereRadius}})
+      .material(0, instance->getMaterialInstance())
+      .geometry(0, RenderableManager::PrimitiveType::TRIANGLES, vertexBuffer, indexBuffer, 0, indexCount)
+      .culling(false)
+      .castShadows(false)
+      .receiveShadows(false)
       .build(*_engine, renderable);
 
   return std::make_shared<EntityWrapper>(renderable);

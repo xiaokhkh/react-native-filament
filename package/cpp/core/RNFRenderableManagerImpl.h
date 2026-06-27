@@ -62,6 +62,8 @@ public: // Public API
 
   std::shared_ptr<EntityWrapper> createPlane(std::shared_ptr<MaterialWrapper> materialWrapper, double halfExtendX, double halfExtendY,
                                              double halfExtendZ);
+  std::shared_ptr<EntityWrapper> createSphere(std::shared_ptr<MaterialWrapper> materialWrapper, double radius, int32_t rings,
+                                              int32_t sectors);
   VertexEntity createImageBackground(MaterialInstance* materialInstance);
   std::shared_ptr<EntityWrapper> createDebugCubeWireframe(float halfExtentX, float halfExtentY, float halfExtentZ,
                                                           std::optional<std::shared_ptr<MaterialWrapper>> materialWrapper,
