@@ -9,21 +9,36 @@
 /* Begin PBXBuildFile section */
 		0C80B921A6F3F58F76C31292 /* libPods-AppExampleFabric.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5DCACB8F33CDC322A6C60F78 /* libPods-AppExampleFabric.a */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
+		6FB6B30861A9DC7301F3B5C0 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 78C2BC7FC9D896F4AA54CEC1 /* Foundation.framework */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		C0DE5CAEC10136602AE17C19 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
+		DE7EDD469D24EBD0A3D253DB /* AppExampleFabricUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F927D86479C928218DC69EA /* AppExampleFabricUITests.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		16B6B3A0D2C4034F3112BBF1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 83CBB9F71A601CBA00E9B192 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 13B07F861A680F5B00A75B9A;
+			remoteInfo = AppExampleFabric;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		13B07F961A680F5B00A75B9A /* AppExampleFabric.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AppExampleFabric.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = AppExampleFabric/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = AppExampleFabric/Info.plist; sourceTree = "<group>"; };
 		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = AppExampleFabric/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		1F927D86479C928218DC69EA /* AppExampleFabricUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AppExampleFabricUITests.swift; sourceTree = "<group>"; };
 		3B4392A12AC88292D35C810B /* Pods-AppExampleFabric.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AppExampleFabric.debug.xcconfig"; path = "Target Support Files/Pods-AppExampleFabric/Pods-AppExampleFabric.debug.xcconfig"; sourceTree = "<group>"; };
 		5709B34CF0A7D63546082F79 /* Pods-AppExampleFabric.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AppExampleFabric.release.xcconfig"; path = "Target Support Files/Pods-AppExampleFabric/Pods-AppExampleFabric.release.xcconfig"; sourceTree = "<group>"; };
 		5DCACB8F33CDC322A6C60F78 /* libPods-AppExampleFabric.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-AppExampleFabric.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = AppExampleFabric/AppDelegate.swift; sourceTree = "<group>"; };
+		78C2BC7FC9D896F4AA54CEC1 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS14.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = AppExampleFabric/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		E9ED687BB5E70E9F971D6C77 /* AppExampleFabricUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AppExampleFabricUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -33,6 +48,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				0C80B921A6F3F58F76C31292 /* libPods-AppExampleFabric.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		19A0CFF99FF17B6E761F30CC /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6FB6B30861A9DC7301F3B5C0 /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -56,8 +79,18 @@
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
 				5DCACB8F33CDC322A6C60F78 /* libPods-AppExampleFabric.a */,
+				CFC06C212112BFDE2C912830 /* iOS */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		468F2F24FE5D625F92060DED /* AppExampleFabricUITests */ = {
+			isa = PBXGroup;
+			children = (
+				1F927D86479C928218DC69EA /* AppExampleFabricUITests.swift */,
+			);
+			name = AppExampleFabricUITests;
+			path = AppExampleFabricUITests;
 			sourceTree = "<group>";
 		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
@@ -75,6 +108,7 @@
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				BBD78D7AC51CEA395F1C20DB /* Pods */,
+				468F2F24FE5D625F92060DED /* AppExampleFabricUITests */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -85,6 +119,7 @@
 			isa = PBXGroup;
 			children = (
 				13B07F961A680F5B00A75B9A /* AppExampleFabric.app */,
+				E9ED687BB5E70E9F971D6C77 /* AppExampleFabricUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -96,6 +131,14 @@
 				5709B34CF0A7D63546082F79 /* Pods-AppExampleFabric.release.xcconfig */,
 			);
 			path = Pods;
+			sourceTree = "<group>";
+		};
+		CFC06C212112BFDE2C912830 /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				78C2BC7FC9D896F4AA54CEC1 /* Foundation.framework */,
+			);
+			name = iOS;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -121,6 +164,24 @@
 			productName = AppExampleFabric;
 			productReference = 13B07F961A680F5B00A75B9A /* AppExampleFabric.app */;
 			productType = "com.apple.product-type.application";
+		};
+		F25FB0E03C8AC3A6B913ADFD /* AppExampleFabricUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2DAA70E72C29F72B0DF229D3 /* Build configuration list for PBXNativeTarget "AppExampleFabricUITests" */;
+			buildPhases = (
+				F507A96FD5B8620280821154 /* Sources */,
+				19A0CFF99FF17B6E761F30CC /* Frameworks */,
+				EAEE12F7CE28EB21662D1D11 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				57980AFFA24541496899FFF4 /* PBXTargetDependency */,
+			);
+			name = AppExampleFabricUITests;
+			productName = AppExampleFabricUITests;
+			productReference = E9ED687BB5E70E9F971D6C77 /* AppExampleFabricUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
 
@@ -149,6 +210,7 @@
 			projectRoot = "";
 			targets = (
 				13B07F861A680F5B00A75B9A /* AppExampleFabric */,
+				F25FB0E03C8AC3A6B913ADFD /* AppExampleFabricUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -161,6 +223,13 @@
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				C0DE5CAEC10136602AE17C19 /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EAEE12F7CE28EB21662D1D11 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -250,7 +319,24 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		F507A96FD5B8620280821154 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DE7EDD469D24EBD0A3D253DB /* AppExampleFabricUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		57980AFFA24541496899FFF4 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = AppExampleFabric;
+			target = 13B07F861A680F5B00A75B9A /* AppExampleFabric */;
+			targetProxy = 16B6B3A0D2C4034F3112BBF1 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
@@ -304,6 +390,22 @@
 				PRODUCT_NAME = AppExampleFabric;
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
+			};
+			name = Release;
+		};
+		16624A44BAC46DA7FA6B8A4C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
+				PRODUCT_BUNDLE_IDENTIFIER = org.reactjs.native.example.AppExampleFabricUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = AppExampleFabric;
+				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
 		};
@@ -453,6 +555,21 @@
 			};
 			name = Release;
 		};
+		FFB62B691C32B94FF5CCEE19 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
+				PRODUCT_BUNDLE_IDENTIFIER = org.reactjs.native.example.AppExampleFabricUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = AppExampleFabric;
+			};
+			name = Debug;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -461,6 +578,15 @@
 			buildConfigurations = (
 				13B07F941A680F5B00A75B9A /* Debug */,
 				13B07F951A680F5B00A75B9A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		2DAA70E72C29F72B0DF229D3 /* Build configuration list for PBXNativeTarget "AppExampleFabricUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				16624A44BAC46DA7FA6B8A4C /* Release */,
+				FFB62B691C32B94FF5CCEE19 /* Debug */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

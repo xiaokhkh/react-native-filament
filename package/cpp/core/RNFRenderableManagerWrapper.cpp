@@ -15,6 +15,8 @@ void RenderableManagerWrapper::loadHybridMethods() {
   registerHybridMethod("setMaterialInstanceAt", &RenderableManagerWrapper::setMaterialInstanceAt, this);
   registerHybridMethod("setAssetEntitiesOpacity", &RenderableManagerWrapper::setAssetEntitiesOpacity, this);
   registerHybridMethod("setInstanceEntitiesOpacity", &RenderableManagerWrapper::setInstanceWrapperEntitiesOpacity, this);
+  registerHybridMethod("setAssetEntitiesPriority", &RenderableManagerWrapper::setAssetEntitiesPriority, this);
+  registerHybridMethod("setInstanceEntitiesPriority", &RenderableManagerWrapper::setInstanceWrapperEntitiesPriority, this);
   registerHybridMethod("changeMaterialTextureMap", &RenderableManagerWrapper::changeMaterialTextureMap, this);
   registerHybridMethod("setCastShadow", &RenderableManagerWrapper::setCastShadow, this);
   registerHybridMethod("setReceiveShadow", &RenderableManagerWrapper::setReceiveShadow, this);
@@ -42,6 +44,12 @@ void RenderableManagerWrapper::setAssetEntitiesOpacity(std::shared_ptr<FilamentA
 }
 void RenderableManagerWrapper::setInstanceWrapperEntitiesOpacity(std::shared_ptr<FilamentInstanceWrapper> instanceWrapper, double opacity) {
   pointee()->setInstanceWrapperEntitiesOpacity(instanceWrapper, opacity);
+}
+void RenderableManagerWrapper::setAssetEntitiesPriority(std::shared_ptr<FilamentAssetWrapper> asset, int32_t priority) {
+  pointee()->setAssetEntitiesPriority(asset, priority);
+}
+void RenderableManagerWrapper::setInstanceWrapperEntitiesPriority(std::shared_ptr<FilamentInstanceWrapper> instanceWrapper, int32_t priority) {
+  pointee()->setInstanceWrapperEntitiesPriority(instanceWrapper, priority);
 }
 void RenderableManagerWrapper::changeMaterialTextureMap(std::shared_ptr<EntityWrapper> entityWrapper, const std::string& materialName,
                                                         std::shared_ptr<FilamentBuffer> textureBuffer, const std::string& textureFlags) {

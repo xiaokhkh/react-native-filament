@@ -97,7 +97,7 @@ export interface RNFCamera extends PointerHolder {
    *
    * @see Fov.
    */
-  setProjection(fov: number, aspect: number, near: number, far: number): void
+  setProjection(fov: number, aspect: number, near: number, far: number, direction?: 'vertical' | 'horizontal'): void
 
   /**
    * Sets an orthographic projection matrix from six clip planes.

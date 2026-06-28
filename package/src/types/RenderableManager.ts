@@ -60,6 +60,20 @@ export interface RenderableManager extends PointerHolder {
   setInstanceEntitiesOpacity(instance: FilamentInstance, opacity: number): void
 
   /**
+   * Sets the render priority of every renderable entity in the asset.
+   * Values are clamped by Filament to the range 0..7.
+   * @worklet
+   */
+  setAssetEntitiesPriority(asset: FilamentAsset, priority: number): void
+
+  /**
+   * Sets the render priority of every renderable entity in the instance.
+   * Values are clamped by Filament to the range 0..7.
+   * @worklet
+   */
+  setInstanceEntitiesPriority(instance: FilamentInstance, priority: number): void
+
+  /**
    * Sets the baseColorMap parameter to the given textureBuffer.
    * @worklet
    */

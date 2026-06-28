@@ -10,7 +10,7 @@ struct DecodedSpzSplat {
   float position[3];
   float scale[3];
   float rotation[4];
-  uint8_t color[4];
+  float color[4];
 };
 
 struct DecodedSpzCloud {

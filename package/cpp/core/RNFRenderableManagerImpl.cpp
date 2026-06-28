@@ -96,6 +96,36 @@ void RenderableManagerImpl::setInstanceEntitiesOpacity(FilamentInstance* instanc
   }
 }
 
+void RenderableManagerImpl::setAssetEntitiesPriority(std::shared_ptr<FilamentAssetWrapper> asset, int priority) {
+  std::shared_ptr<FilamentAsset> fAsset = asset->getAsset();
+  size_t instanceCount = fAsset->getAssetInstanceCount();
+  FilamentInstance** instances = fAsset->getAssetInstances();
+  for (size_t i = 0; i < instanceCount; ++i) {
+    setInstanceEntitiesPriority(instances[i], priority);
+  }
+}
+
+void RenderableManagerImpl::setInstanceWrapperEntitiesPriority(std::shared_ptr<FilamentInstanceWrapper> instanceWrapper, int priority) {
+  FilamentInstance* filamentInstance = instanceWrapper->getInstance();
+  setInstanceEntitiesPriority(filamentInstance, priority);
+}
+
+void RenderableManagerImpl::setInstanceEntitiesPriority(FilamentInstance* instance, int priority) {
+  RenderableManager& renderableManager = _engine->getRenderableManager();
+  const uint8_t clampedPriority = static_cast<uint8_t>(std::clamp(priority, 0, 7));
+  const Entity* entities = instance->getEntities();
+  size_t entityCount = instance->getEntityCount();
+
+  for (size_t i = 0; i < entityCount; ++i) {
+    Entity entity = entities[i];
+    if (!renderableManager.hasComponent(entity)) {
+      continue;
+    }
+
+    renderableManager.setPriority(renderableManager.getInstance(entity), clampedPriority);
+  }
+}
+
 void RenderableManagerImpl::setMaterialInstanceAt(std::shared_ptr<EntityWrapper> entity, int index,
                                                   std::shared_ptr<MaterialInstanceWrapper> materialInstance) {
   RenderableManager& renderableManager = _engine->getRenderableManager();

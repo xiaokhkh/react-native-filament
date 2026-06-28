@@ -145,14 +145,9 @@ void decodeQuaternionSmallestThree(float rotation[4], const uint8_t* bytes) {
   rotation[largestIndex] = std::sqrt(std::max(0.0f, 1.0f - sumSquares));
 }
 
-uint8_t toByte(float value) {
-  return static_cast<uint8_t>(std::clamp(std::round(value * 255.0f), 0.0f, 255.0f));
-}
-
-uint8_t decodeColorByte(uint8_t packed) {
+float decodeColor(uint8_t packed) {
   const float sh0 = ((static_cast<float>(packed) / 255.0f) - 0.5f) / COLOR_SCALE;
-  const float rgb = std::clamp(0.5f + SH_C0 * sh0, 0.0f, 1.0f);
-  return toByte(rgb);
+  return 0.5f + SH_C0 * sh0;
 }
 
 } // namespace
@@ -260,10 +255,10 @@ DecodedSpzCloud SpzDecoder::decodeLegacyGzip(const uint8_t* data, size_t size) {
     } else {
       decodeQuaternionFirstThree(splat.rotation, rotations + i * 3);
     }
-    splat.color[0] = decodeColorByte(colors[base3 + 0]);
-    splat.color[1] = decodeColorByte(colors[base3 + 1]);
-    splat.color[2] = decodeColorByte(colors[base3 + 2]);
-    splat.color[3] = alphas[i];
+    splat.color[0] = decodeColor(colors[base3 + 0]);
+    splat.color[1] = decodeColor(colors[base3 + 1]);
+    splat.color[2] = decodeColor(colors[base3 + 2]);
+    splat.color[3] = static_cast<float>(alphas[i]) / 255.0f;
   }
 
   return cloud;

@@ -80,7 +80,7 @@ export function Camera({ cameraManipulator, ...cameraConfig }: CameraProps) {
   const cameraUpZ = cameraUp[2]
 
   const prevAspectRatio = useSharedValue(0)
-  RenderCallbackContext.useRenderCallback(() => {
+  RenderCallbackContext.useRenderCallback(({ timeSinceLastFrame }) => {
     'worklet'
 
     const aspectRatio = view.getAspectRatio()
@@ -92,6 +92,7 @@ export function Camera({ cameraManipulator, ...cameraConfig }: CameraProps) {
     }
 
     if (cameraManipulator != null) {
+      cameraManipulator.update(timeSinceLastFrame)
       camera.lookAtCameraManipulator(cameraManipulator)
     } else {
       camera.lookAt(

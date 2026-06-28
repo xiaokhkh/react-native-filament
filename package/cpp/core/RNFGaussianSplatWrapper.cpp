@@ -112,7 +112,7 @@ struct GaussianSplatResource::GaussianSplatVertex {
   float4 axis0;
   float4 axis1;
   float4 axis2;
-  ubyte4 color;
+  float4 color;
 };
 
 namespace {
@@ -311,7 +311,7 @@ void GaussianSplatResource::buildRenderable(const DecodedSpzCloud& cloud, std::s
     const float radius = std::max({length(axis0), length(axis1), length(axis2)});
     const uint32_t vertexBase = static_cast<uint32_t>(i * 4);
     const uint32_t indexBase = static_cast<uint32_t>(i * 6);
-    const ubyte4 color = {splat.color[0], splat.color[1], splat.color[2], splat.color[3]};
+    const float4 color = {splat.color[0], splat.color[1], splat.color[2], splat.color[3]};
 
     for (int c = 0; c < 4; ++c) {
       vertices[vertexBase + c] = {
@@ -353,9 +353,8 @@ void GaussianSplatResource::buildRenderable(const DecodedSpzCloud& cloud, std::s
                                  sizeof(GaussianSplatVertex))
                       .attribute(VertexAttribute::CUSTOM3, 0, VertexBuffer::AttributeType::FLOAT4, offsetof(GaussianSplatVertex, axis2),
                                  sizeof(GaussianSplatVertex))
-                      .attribute(VertexAttribute::CUSTOM4, 0, VertexBuffer::AttributeType::UBYTE4, offsetof(GaussianSplatVertex, color),
+                      .attribute(VertexAttribute::CUSTOM4, 0, VertexBuffer::AttributeType::FLOAT4, offsetof(GaussianSplatVertex, color),
                                  sizeof(GaussianSplatVertex))
-                      .normalized(VertexAttribute::CUSTOM4)
                       .build(*_engine);
   _vertexBuffer->setBufferAt(*_engine, 0,
                              VertexBuffer::BufferDescriptor(vertices, vertexCount * sizeof(GaussianSplatVertex), freeVertexBuffer));

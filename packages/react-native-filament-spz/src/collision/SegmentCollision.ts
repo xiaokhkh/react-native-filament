@@ -1,5 +1,28 @@
 export type CollisionSegment = readonly [number, number, number, number]
 
+export type CollisionBounds = {
+  readonly minX: number
+  readonly maxX: number
+  readonly minZ: number
+  readonly maxZ: number
+}
+
+export type CollisionPoint2 = readonly [number, number]
+
+export type CollisionPolygon = readonly CollisionPoint2[]
+
+export type CollisionNavRegion = {
+  readonly cellSize: number
+  readonly bodyYRange: readonly [number, number]
+  readonly bounds: CollisionBounds
+  readonly polygons: readonly CollisionPolygon[]
+}
+
+export type CollisionObstaclePolygon = {
+  readonly id: string
+  readonly polygon: CollisionPolygon
+}
+
 export type CollisionDebugBox = {
   readonly id: string
   readonly position: readonly [number, number, number]

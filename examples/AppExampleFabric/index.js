@@ -1,7 +1,6 @@
 import { AppRegistry } from 'react-native'
-import App from 'shared/src/App'
+import { configureReanimatedLogger, ReanimatedLogLevel } from 'react-native-reanimated'
 import { name as appName } from './app.json'
-import { StrictMode } from 'react'
 
 import { version } from 'react-native-worklets-core/package.json'
 console.log(`Using react-native-worklets-core@${version}`)
@@ -24,12 +23,10 @@ setLogger({
   error: prefixLog(console.error),
 })
 
-// Run filament tests
-import { runTests } from 'react-native-filament-test'
-runTests()
+// The upstream example runs native self-tests on startup. Disable them here so the demo
+// opens without permanent error snackbars covering the scene.
+configureReanimatedLogger({ level: ReanimatedLogLevel.warn, strict: false })
 
-AppRegistry.registerComponent(appName, () => () => (
-  <StrictMode>
-    <App />
-  </StrictMode>
-))
+const App = require('shared/src/App').default
+
+AppRegistry.registerComponent(appName, () => App)

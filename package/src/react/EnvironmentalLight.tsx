@@ -29,7 +29,7 @@ export function EnvironmentalLight({ source, intensity = 25_000, irradianceBands
   useWorkletEffect(() => {
     'worklet'
 
-    if (lightBuffer == null) return
+    if (lightBuffer == null || !lightBuffer.isValid) return
     engine.setIndirectLight(lightBuffer, intensity, irradianceBands)
     lightBuffer.release()
   })

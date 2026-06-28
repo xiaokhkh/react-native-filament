@@ -48,6 +48,12 @@ public: // Public API
 
   void setInstanceEntitiesOpacity(FilamentInstance* instance, double opacity);
 
+  void setAssetEntitiesPriority(std::shared_ptr<FilamentAssetWrapper> asset, int priority);
+
+  void setInstanceWrapperEntitiesPriority(std::shared_ptr<FilamentInstanceWrapper> instanceWrapper, int priority);
+
+  void setInstanceEntitiesPriority(FilamentInstance* instance, int priority);
+
   Texture* createTextureFromBuffer(std::shared_ptr<FilamentBuffer> buffer, const std::string& textureFlags);
 
   /**

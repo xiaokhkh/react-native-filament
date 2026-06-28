@@ -11,7 +11,7 @@ export function useDefaultLight(enableDirectionalLight = true) {
   useWorkletEffect(() => {
     'worklet'
 
-    if (lightBuffer == null) return
+    if (lightBuffer == null || !lightBuffer.isValid) return
     engine.setIndirectLight(lightBuffer, 25_000, undefined)
     lightBuffer.release()
   })

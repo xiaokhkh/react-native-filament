@@ -12,7 +12,7 @@ const modules = Object.keys({ ...pak.peerDependencies })
 /** @type {import('expo/metro-config').MetroConfig} */
 const defaultConfig = getDefaultConfig(__dirname)
 
-const assetExts = [...defaultConfig.resolver.assetExts, 'glb', 'ktx', 'filamat']
+const assetExts = [...defaultConfig.resolver.assetExts, 'glb', 'ktx', 'filamat', 'spz']
 const assetPath = path.join(__dirname, '..', 'Shared', 'assets')
 const assetFilesMap = {}
 
@@ -44,6 +44,13 @@ const config = {
     ),
     resolveRequest: (context, moduleName, platform) => {
       const baseFileName = path.basename(moduleName);
+
+      if (moduleName === 'react-native-filament-spz') {
+        return {
+          type: 'sourceFile',
+          filePath: path.resolve(root, 'packages', 'react-native-filament-spz', 'src', 'index.ts'),
+        }
+      }
 
       // Only handle asset files with custom resolution
       if (assetFilesMap[baseFileName]) {

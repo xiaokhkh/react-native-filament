@@ -1,6 +1,5 @@
 import { registerRootComponent } from 'expo';
-
-import App from 'shared/src/App'
+import { configureReanimatedLogger, ReanimatedLogLevel } from 'react-native-reanimated'
 
 import { version } from 'react-native-worklets-core/package.json'
 console.log(`Using react-native-worklets-core@${version}`)
@@ -22,6 +21,10 @@ setLogger({
   error: prefixLog(console.error),
 })
 
+configureReanimatedLogger({ level: ReanimatedLogLevel.warn, strict: false })
+
+const App = require('shared/src/App').default
+
 // Run filament tests
 import { runTests } from 'react-native-filament-test'
 runTests()
@@ -30,4 +33,3 @@ runTests()
 // It also ensures that whether you load the app in Expo Go or in a native build,
 // the environment is set up appropriately
 registerRootComponent(App);
-

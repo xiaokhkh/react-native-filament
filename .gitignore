@@ -13,4 +13,5 @@ examples/Shared/assets/*.spz
 examples/Shared/assets/*collision*
 examples/Shared/assets/character_ball.*
 examples/Shared/assets/spz_gaussian_splat.*
-examples/Shared/src/generated/
+examples/Shared/src/generated/*
+!examples/Shared/src/generated/beloSpzCollision.ts

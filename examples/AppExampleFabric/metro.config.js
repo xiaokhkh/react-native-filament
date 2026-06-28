@@ -7,7 +7,7 @@ const modules = Object.keys({ ...pak.peerDependencies })
 
 const defaultConfig = getDefaultConfig(__dirname)
 
-const assetExts = [...defaultConfig.resolver.assetExts, 'glb', 'ktx', 'filamat']
+const assetExts = [...defaultConfig.resolver.assetExts, 'glb', 'ktx', 'filamat', 'spz']
 const assetPath = path.join(__dirname, '..', 'Shared', 'assets')
 const assetFilesMap = {}
 
@@ -34,10 +34,33 @@ const config = {
       acc[name] = path.join(__dirname, 'node_modules', name)
       return acc
     }, {
+      "react-native-filament": path.resolve(root, 'package'),
+      "react-native-filament-spz": path.resolve(root, 'packages', 'react-native-filament-spz'),
       "react-native-filament-test": path.resolve(root, 'package', 'src', 'test', 'RunTests'),
     }),
 
     resolveRequest: (context, moduleName, platform) => {
+      if (moduleName === 'react-native-filament') {
+        return {
+          type: 'sourceFile',
+          filePath: path.resolve(root, 'package', 'src', 'index.tsx'),
+        }
+      }
+
+      if (moduleName === 'react-native-filament-spz') {
+        return {
+          type: 'sourceFile',
+          filePath: path.resolve(root, 'packages', 'react-native-filament-spz', 'src', 'index.ts'),
+        }
+      }
+
+      if (moduleName === 'react-native-filament-test') {
+        return {
+          type: 'sourceFile',
+          filePath: path.resolve(root, 'package', 'src', 'test', 'RunTests.ts'),
+        }
+      }
+
       const baseFileName = path.basename(moduleName);
       if (!assetFilesMap[baseFileName]) {
         return context.resolveRequest(context, moduleName, platform);

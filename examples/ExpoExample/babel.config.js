@@ -1,7 +1,7 @@
 const path = require('path')
 
 const aliasMap = {
-  '@assets': path.join(__dirname, '..', 'Shared', 'assets'),
+  '@assets': path.join(__dirname, 'assets'),
 }
 
 /** @type {import('react-native-worklets/plugin').PluginOptions} */

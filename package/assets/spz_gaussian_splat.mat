@@ -66,6 +66,7 @@ vertex {
         const float blurAmount = 0.3;
         const float minAlpha = 0.00196;
         const float alphaGain = 1.0;
+        const float focalAdjustment = 2.0;
         vec4 corner = getCustom0();
         vec3 axis0 = getCustom1().xyz;
         vec3 axis1 = getCustom2().xyz;
@@ -90,7 +91,7 @@ vertex {
             return;
         }
 
-        vec2 scaledRenderSize = max(materialParams.renderSize, vec2(1.0));
+        vec2 scaledRenderSize = max(materialParams.renderSize * focalAdjustment, vec2(1.0));
         vec2 focal = 0.5 * scaledRenderSize * vec2(clipFromView[0][0], clipFromView[1][1]);
         float invZ = 1.0 / min(centerView.z, -0.0001);
         vec2 jacobianZ = -(focal * invZ * centerView.xy) * invZ;
@@ -153,11 +154,17 @@ fragment {
         if (r2 > adjustedStdDev * adjustedStdDev) {
             discard;
         }
-        float alpha = variable_splatColor.a * exp(-0.5 * r2);
-        if (alpha < 0.00196) {
+        vec4 splatColor = variable_splatColor;
+        if (splatColor.a <= 1.0) {
+            splatColor.a *= exp(-0.5 * r2);
+        } else {
+            float opacity = exp((splatColor.a * splatColor.a - 1.0) / 2.718281828459045);
+            splatColor.a = 1.0 - pow(1.0 - exp(-0.5 * r2), opacity);
+        }
+        if (splatColor.a < 0.00196) {
             discard;
         }
 
-        material.baseColor = vec4(variable_splatColor.rgb * alpha, alpha);
+        material.baseColor = vec4(splatColor.rgb * splatColor.a, splatColor.a);
     }
 }

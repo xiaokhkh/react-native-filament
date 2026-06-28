@@ -26,6 +26,8 @@ private: // Exposed JS API
   void setMaterialInstanceAt(std::shared_ptr<EntityWrapper> entity, int index, std::shared_ptr<MaterialInstanceWrapper> materialInstance);
   void setAssetEntitiesOpacity(std::shared_ptr<FilamentAssetWrapper> asset, double opacity);
   void setInstanceWrapperEntitiesOpacity(std::shared_ptr<FilamentInstanceWrapper> instanceWrapper, double opacity);
+  void setAssetEntitiesPriority(std::shared_ptr<FilamentAssetWrapper> asset, int32_t priority);
+  void setInstanceWrapperEntitiesPriority(std::shared_ptr<FilamentInstanceWrapper> instanceWrapper, int32_t priority);
   void changeMaterialTextureMap(std::shared_ptr<EntityWrapper> entityWrapper, const std::string& materialName,
                                 std::shared_ptr<FilamentBuffer> textureBuffer, const std::string& textureFlags = "none");
   void setCastShadow(std::shared_ptr<EntityWrapper> entityWrapper, bool castShadow);

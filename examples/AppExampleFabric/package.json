@@ -21,6 +21,7 @@
     "react-native": "0.83.1",
     "react-native-blob-util": "^0.24.6",
     "react-native-filament": "workspace:^",
+    "react-native-filament-spz": "workspace:^",
     "react-native-gesture-handler": "^2.30.0",
     "react-native-reanimated": "^4.2.1",
     "react-native-safe-area-context": "^5.5.2",

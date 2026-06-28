@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, isAbsolute, relative, resolve, sep } from 'node:path'
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
@@ -15,12 +15,21 @@ const MERGE_GAP = 0.035
 const DEFAULT_DEBUG_BOX_LIMIT = 420
 const DEFAULT_DEBUG_BOX_HEIGHT = 1.6
 const DEFAULT_DEBUG_BOX_THICKNESS = 0.06
+const DEFAULT_NAV_CELL_SIZE = 0.24
+const DEFAULT_NAV_BODY_MIN_Y = 0.18
+const DEFAULT_NAV_BODY_MAX_Y = 1.55
+const DEFAULT_NAV_OBSTACLE_BAND_CELLS = 1
+const SOLID_LEAF_MARKER = 0xff000000 >>> 0
 
 let characterCollisionMinY = DEFAULT_CHARACTER_COLLISION_MIN_Y
 let characterCollisionMaxY = DEFAULT_CHARACTER_COLLISION_MAX_Y
 let debugBoxLimit = DEFAULT_DEBUG_BOX_LIMIT
 let debugBoxHeight = DEFAULT_DEBUG_BOX_HEIGHT
 let debugBoxThickness = DEFAULT_DEBUG_BOX_THICKNESS
+let navCellSize = DEFAULT_NAV_CELL_SIZE
+let navBodyMinY = DEFAULT_NAV_BODY_MIN_Y
+let navBodyMaxY = DEFAULT_NAV_BODY_MAX_Y
+let navObstacleBandCells = DEFAULT_NAV_OBSTACLE_BAND_CELLS
 
 function valueAfter(args, name, fallback) {
   const index = args.indexOf(name)
@@ -70,6 +79,9 @@ Options:
   --debug-box-limit <count>     Maximum debug boxes to emit. Default: ${DEFAULT_DEBUG_BOX_LIMIT}.
   --debug-box-height <meters>   Debug box height. Default: ${DEFAULT_DEBUG_BOX_HEIGHT}.
   --debug-box-thickness <m>     Debug box minimum X/Z thickness. Default: ${DEFAULT_DEBUG_BOX_THICKNESS}.
+  --nav-cell-size <meters>      Cell size for generated 2D walkable/obstacle polygons. Default: ${DEFAULT_NAV_CELL_SIZE}.
+  --nav-body-y-range <min,max>  Character body Y range treated as clear space. Default: ${DEFAULT_NAV_BODY_MIN_Y},${DEFAULT_NAV_BODY_MAX_Y}.
+  --nav-obstacle-band <cells>   Boundary cells around the walkable component emitted as obstacle polygons. Default: ${DEFAULT_NAV_OBSTACLE_BAND_CELLS}.
   --help                        Show this help.
 `)
 }
@@ -86,6 +98,10 @@ function formatNumber(value) {
 
 function formatVec(values) {
   return `[${values.map(formatNumber).join(', ')}]`
+}
+
+function formatPolygon(points) {
+  return `[${points.map(formatVec).join(', ')}]`
 }
 
 function repoRelativePath(repoRoot, filePath) {
@@ -251,6 +267,286 @@ function debugBoxesFromSegments(segments) {
     .map(({ id, position, halfExtent }) => ({ id, position, halfExtent }))
 }
 
+function popcount(value) {
+  let x = value >>> 0
+  x -= (x >>> 1) & 0x55555555
+  x = (x & 0x33333333) + ((x >>> 2) & 0x33333333)
+  return (((x + (x >>> 4)) & 0x0f0f0f0f) * 0x01010101) >>> 24
+}
+
+function createVoxelQuery(voxelJsonPath, voxelBinPath, semantics) {
+  const metadata = JSON.parse(readFileSync(voxelJsonPath, 'utf-8'))
+  const binary = readFileSync(voxelBinPath)
+  const words = new Uint32Array(binary.buffer, binary.byteOffset, Math.floor(binary.byteLength / 4))
+  const nodes = words.subarray(0, metadata.nodeCount)
+  const leafData = words.subarray(metadata.nodeCount, metadata.nodeCount + metadata.leafDataCount)
+  const resolution = metadata.voxelResolution
+  const leafSize = metadata.leafSize
+  const treeDepth = metadata.treeDepth
+  const gridMin = metadata.gridBounds.min
+  const gridMax = metadata.gridBounds.max
+  const voxelCounts = gridMax.map((value, index) => Math.round((value - gridMin[index]) / resolution))
+
+  function worldToVoxel(x, y, z) {
+    const scale = semantics.metricScaleFactor
+    const yOffset = semantics.groundPlaneOffset
+    const raw = semantics.flipY ? [x / scale, -(y - yOffset) / scale, -z / scale] : [x / scale, (y - yOffset) / scale, z / scale]
+    return raw.map((value, index) => Math.floor((value - gridMin[index]) / resolution))
+  }
+
+  function isSolidVoxel(vx, vy, vz) {
+    if (vx < 0 || vy < 0 || vz < 0 || vx >= voxelCounts[0] || vy >= voxelCounts[1] || vz >= voxelCounts[2]) {
+      return true
+    }
+
+    const bx = vx >> 2
+    const by = vy >> 2
+    const bz = vz >> 2
+    let nodeIndex = 0
+    let levelIndex = treeDepth
+
+    while (true) {
+      const word = nodes[nodeIndex]
+      if (word === SOLID_LEAF_MARKER) return true
+
+      const childMask = word >>> 24
+      const baseOffset = word & 0x00ffffff
+      if (childMask === 0) {
+        const bitIndex = (vx & 3) + ((vy & 3) << 2) + ((vz & 3) << 4)
+        const wordIndex = baseOffset * 2 + (bitIndex >= 32 ? 1 : 0)
+        return (((leafData[wordIndex] ?? 0) >>> (bitIndex & 31)) & 1) === 1
+      }
+
+      if (levelIndex <= 0) return false
+      const childLevelIndex = levelIndex - 1
+      const childOctant = ((bx >> childLevelIndex) & 1) | (((by >> childLevelIndex) & 1) << 1) | (((bz >> childLevelIndex) & 1) << 2)
+      if ((childMask & (1 << childOctant)) === 0) return false
+
+      nodeIndex = baseOffset + popcount(childMask & ((1 << childOctant) - 1))
+      levelIndex = childLevelIndex
+    }
+  }
+
+  function isSolidAtWorld(x, y, z) {
+    const [vx, vy, vz] = worldToVoxel(x, y, z)
+    return isSolidVoxel(vx, vy, vz)
+  }
+
+  return {
+    metadata,
+    isSolidAtWorld,
+  }
+}
+
+function isBodyClearAt(query, x, z) {
+  const step = Math.max(0.1, query.metadata.voxelResolution * 2)
+  for (let y = navBodyMinY; y <= navBodyMaxY + 0.0001; y += step) {
+    if (query.isSolidAtWorld(x, y, z)) return false
+  }
+  return true
+}
+
+function getNeighbors4(cell) {
+  return [
+    [cell[0] + 1, cell[1]],
+    [cell[0] - 1, cell[1]],
+    [cell[0], cell[1] + 1],
+    [cell[0], cell[1] - 1],
+  ]
+}
+
+function findLargestComponent(mask, width, height) {
+  const visited = Array.from({ length: height }, () => Array(width).fill(false))
+  let largest = []
+
+  for (let z = 0; z < height; z += 1) {
+    for (let x = 0; x < width; x += 1) {
+      if (!mask[z][x] || visited[z][x]) continue
+
+      const queue = [[x, z]]
+      const component = []
+      visited[z][x] = true
+      for (let cursor = 0; cursor < queue.length; cursor += 1) {
+        const current = queue[cursor]
+        component.push(current)
+        for (const [nx, nz] of getNeighbors4(current)) {
+          if (nx < 0 || nz < 0 || nx >= width || nz >= height || visited[nz][nx] || !mask[nz][nx]) continue
+          visited[nz][nx] = true
+          queue.push([nx, nz])
+        }
+      }
+
+      if (component.length > largest.length) largest = component
+    }
+  }
+
+  return largest
+}
+
+function componentToMask(component, width, height) {
+  const mask = Array.from({ length: height }, () => Array(width).fill(false))
+  for (const [x, z] of component) {
+    mask[z][x] = true
+  }
+  return mask
+}
+
+function mergeMaskToRectangles(mask, width, height) {
+  const rectangles = []
+  const active = new Map()
+
+  for (let z = 0; z < height; z += 1) {
+    const nextActive = new Map()
+    let x = 0
+    while (x < width) {
+      while (x < width && !mask[z][x]) x += 1
+      const startX = x
+      while (x < width && mask[z][x]) x += 1
+      if (x === startX) continue
+
+      const key = `${startX},${x}`
+      const existing = active.get(key)
+      if (existing) {
+        existing.z1 = z + 1
+        nextActive.set(key, existing)
+      } else {
+        const rectangle = { x0: startX, x1: x, z0: z, z1: z + 1 }
+        rectangles.push(rectangle)
+        nextActive.set(key, rectangle)
+      }
+    }
+    active.clear()
+    for (const [key, value] of nextActive) active.set(key, value)
+  }
+
+  return rectangles
+}
+
+function rectangleToPolygon(rectangle, bounds, cellSize) {
+  const minX = round(bounds.minX + rectangle.x0 * cellSize)
+  const maxX = round(bounds.minX + rectangle.x1 * cellSize)
+  const minZ = round(bounds.minZ + rectangle.z0 * cellSize)
+  const maxZ = round(bounds.minZ + rectangle.z1 * cellSize)
+  return [
+    [minX, minZ],
+    [maxX, minZ],
+    [maxX, maxZ],
+    [minX, maxZ],
+  ]
+}
+
+function boundsFromPolygons(polygons, fallback) {
+  if (polygons.length === 0) return fallback
+  const bounds = {
+    minX: Infinity,
+    maxX: -Infinity,
+    minZ: Infinity,
+    maxZ: -Infinity,
+  }
+  for (const polygon of polygons) {
+    for (const [x, z] of polygon) {
+      bounds.minX = Math.min(bounds.minX, x)
+      bounds.maxX = Math.max(bounds.maxX, x)
+      bounds.minZ = Math.min(bounds.minZ, z)
+      bounds.maxZ = Math.max(bounds.maxZ, z)
+    }
+  }
+  return bounds
+}
+
+function buildObstacleBandMask(walkableMask, rawWalkableMask, width, height) {
+  const mask = Array.from({ length: height }, () => Array(width).fill(false))
+  for (let z = 0; z < height; z += 1) {
+    for (let x = 0; x < width; x += 1) {
+      if (walkableMask[z][x] || rawWalkableMask[z][x]) continue
+
+      let adjacent = false
+      for (let dz = -navObstacleBandCells; dz <= navObstacleBandCells && !adjacent; dz += 1) {
+        for (let dx = -navObstacleBandCells; dx <= navObstacleBandCells; dx += 1) {
+          if (dx === 0 && dz === 0) continue
+          const nx = x + dx
+          const nz = z + dz
+          if (nx >= 0 && nz >= 0 && nx < width && nz < height && walkableMask[nz][nx]) {
+            adjacent = true
+            break
+          }
+        }
+      }
+      mask[z][x] = adjacent
+    }
+  }
+  return mask
+}
+
+function buildNavigationFromVoxel(repoRoot, report, semantics, bounds) {
+  const voxelJsonPath = resolveRepoPath(repoRoot, report.output ?? '')
+  const voxelBinPath = voxelJsonPath.replace(/\.json$/i, '.bin')
+  if (!report.output || !existsSync(voxelJsonPath) || !existsSync(voxelBinPath)) {
+    const fallbackPolygon = [
+      [bounds.minX, bounds.minZ],
+      [bounds.maxX, bounds.minZ],
+      [bounds.maxX, bounds.maxZ],
+      [bounds.minX, bounds.maxZ],
+    ]
+    return {
+      source: undefined,
+      binary: undefined,
+      walkableCells: 1,
+      walkableComponentCells: 1,
+      walkableComponents: [1],
+      obstacleCells: 0,
+      walkable: {
+        cellSize: navCellSize,
+        bodyYRange: [navBodyMinY, navBodyMaxY],
+        bounds,
+        polygons: [fallbackPolygon],
+      },
+      obstacles: [],
+    }
+  }
+
+  const query = createVoxelQuery(voxelJsonPath, voxelBinPath, semantics)
+  const width = Math.ceil((bounds.maxX - bounds.minX) / navCellSize)
+  const height = Math.ceil((bounds.maxZ - bounds.minZ) / navCellSize)
+  const rawWalkableMask = Array.from({ length: height }, () => Array(width).fill(false))
+
+  for (let z = 0; z < height; z += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const worldX = bounds.minX + (x + 0.5) * navCellSize
+      const worldZ = bounds.minZ + (z + 0.5) * navCellSize
+      rawWalkableMask[z][x] = isBodyClearAt(query, worldX, worldZ)
+    }
+  }
+
+  const largestComponent = findLargestComponent(rawWalkableMask, width, height)
+  const walkableMask = componentToMask(largestComponent, width, height)
+  const walkableRectangles = mergeMaskToRectangles(walkableMask, width, height)
+  const obstacleBandMask = buildObstacleBandMask(walkableMask, rawWalkableMask, width, height)
+  const obstacleRectangles = mergeMaskToRectangles(obstacleBandMask, width, height)
+  const walkablePolygons = walkableRectangles.map((rectangle) => rectangleToPolygon(rectangle, bounds, navCellSize))
+  const obstaclePolygons = obstacleRectangles.map((rectangle, index) => ({
+    id: `generated-obstacle-${index}`,
+    polygon: rectangleToPolygon(rectangle, bounds, navCellSize),
+  }))
+
+  return {
+    source: repoRelativePath(repoRoot, voxelJsonPath),
+    binary: repoRelativePath(repoRoot, voxelBinPath),
+    width,
+    height,
+    walkableCells: rawWalkableMask.flat().filter(Boolean).length,
+    walkableComponentCells: largestComponent.length,
+    obstacleCells: obstacleBandMask.flat().filter(Boolean).length,
+    walkable: {
+      cellSize: navCellSize,
+      bodyYRange: [navBodyMinY, navBodyMaxY],
+      bounds: boundsFromPolygons(walkablePolygons, bounds),
+      polygons: walkablePolygons,
+    },
+    obstacles: obstaclePolygons,
+  }
+}
+
 async function extractSegments(collisionGlb, semantics) {
   const data = readFileSync(collisionGlb)
   const loader = new GLTFLoader()
@@ -320,11 +616,13 @@ function writeTypescript(output, payload, exportName) {
     '// Generated by react-native-filament-spz/bin/generate-spz-mobile-collision.mjs.',
     '// Source data comes from an @playcanvas/splat-transform .collision.glb.',
     '',
-    "import type { CollisionDebugBox, CollisionSegment } from 'react-native-filament-spz'",
+    "import type { CollisionDebugBox, CollisionNavRegion, CollisionObstaclePolygon, CollisionSegment } from 'react-native-filament-spz'",
     '',
     `export const ${exportName} = {`,
     `  source: ${JSON.stringify(payload.source)},`,
     `  collisionGlb: ${JSON.stringify(payload.collisionGlb)},`,
+    `  voxel: ${payload.voxel.source == null ? 'undefined' : JSON.stringify(payload.voxel.source)},`,
+    `  voxelBin: ${payload.voxel.binary == null ? 'undefined' : JSON.stringify(payload.voxel.binary)},`,
     `  generatedAt: ${JSON.stringify(payload.generatedAt)},`,
     '  semantics: {',
     `    metricScaleFactor: ${formatNumber(payload.semantics.metricScaleFactor)},`,
@@ -344,7 +642,29 @@ function writeTypescript(output, payload, exportName) {
     `    rawSegments: ${payload.stats.rawSegments},`,
     `    mergedSegments: ${payload.stats.mergedSegments},`,
     `    debugBoxes: ${payload.stats.debugBoxes},`,
+    `    navGrid: ${payload.stats.navGrid == null ? 'undefined' : JSON.stringify(payload.stats.navGrid)},`,
+    `    walkableCells: ${payload.stats.walkableCells},`,
+    `    walkableComponentCells: ${payload.stats.walkableComponentCells},`,
+    `    walkablePolygons: ${payload.stats.walkablePolygons},`,
+    `    obstacleCells: ${payload.stats.obstacleCells},`,
+    `    obstaclePolygons: ${payload.stats.obstaclePolygons},`,
     '  },',
+    '  walkable: {',
+    `    cellSize: ${formatNumber(payload.walkable.cellSize)},`,
+    `    bodyYRange: ${formatVec(payload.walkable.bodyYRange)},`,
+    '    bounds: {',
+    `      minX: ${formatNumber(payload.walkable.bounds.minX)},`,
+    `      maxX: ${formatNumber(payload.walkable.bounds.maxX)},`,
+    `      minZ: ${formatNumber(payload.walkable.bounds.minZ)},`,
+    `      maxZ: ${formatNumber(payload.walkable.bounds.maxZ)},`,
+    '    },',
+    '    polygons: [',
+    ...payload.walkable.polygons.map((polygon) => `      ${formatPolygon(polygon)},`),
+    '    ],',
+    '  } as const satisfies CollisionNavRegion,',
+    '  obstacles: [',
+    ...payload.obstacles.map((obstacle) => `    { id: ${JSON.stringify(obstacle.id)}, polygon: ${formatPolygon(obstacle.polygon)} },`),
+    '  ] as const satisfies readonly CollisionObstaclePolygon[],',
     '  segments: [',
     ...payload.segments.map((segment) => `    ${formatVec(segment)},`),
     '  ] as readonly CollisionSegment[],',
@@ -386,6 +706,11 @@ characterCollisionMaxY = yRange[1]
 debugBoxLimit = Math.max(0, Math.floor(parseNumber(valueAfter(args, '--debug-box-limit', DEFAULT_DEBUG_BOX_LIMIT), '--debug-box-limit')))
 debugBoxHeight = parseNumber(valueAfter(args, '--debug-box-height', DEFAULT_DEBUG_BOX_HEIGHT), '--debug-box-height')
 debugBoxThickness = parseNumber(valueAfter(args, '--debug-box-thickness', DEFAULT_DEBUG_BOX_THICKNESS), '--debug-box-thickness')
+navCellSize = parseNumber(valueAfter(args, '--nav-cell-size', DEFAULT_NAV_CELL_SIZE), '--nav-cell-size')
+const navBodyRange = parseCsvNumbers(valueAfter(args, '--nav-body-y-range', `${DEFAULT_NAV_BODY_MIN_Y},${DEFAULT_NAV_BODY_MAX_Y}`), 2, '--nav-body-y-range')
+navBodyMinY = navBodyRange[0]
+navBodyMaxY = navBodyRange[1]
+navObstacleBandCells = Math.max(0, Math.floor(parseNumber(valueAfter(args, '--nav-obstacle-band', DEFAULT_NAV_OBSTACLE_BAND_CELLS), '--nav-obstacle-band')))
 const report = JSON.parse(readFileSync(reportPath, 'utf-8'))
 const semantics = report.semantics ?? {
   metricScaleFactor: 1,
@@ -399,13 +724,19 @@ addBoundsSegments(rawSegments, report.targetWorldBounds)
 const segments = mergeAxisSegments(rawSegments)
 const debugBoxes = debugBoxesFromSegments(segments)
 const [minX, _minY, minZ, maxX, _maxY, maxZ] = report.targetWorldBounds
+const bounds = { minX, maxX, minZ, maxZ }
+const navigation = buildNavigationFromVoxel(repoRoot, report, semantics, bounds)
 
 const payload = {
   source: repoRelativePath(repoRoot, resolveRepoPath(repoRoot, report.source)),
   collisionGlb: repoRelativePath(repoRoot, collisionGlb),
+  voxel: {
+    source: navigation.source,
+    binary: navigation.binary,
+  },
   generatedAt: new Date().toISOString(),
   semantics,
-  bounds: { minX, maxX, minZ, maxZ },
+  bounds,
   stats: {
     meshes: extracted.meshes,
     triangles: extracted.triangles,
@@ -413,7 +744,15 @@ const payload = {
     rawSegments: rawSegments.length,
     mergedSegments: segments.length,
     debugBoxes: debugBoxes.length,
+    navGrid: navigation.width != null && navigation.height != null ? { width: navigation.width, height: navigation.height } : undefined,
+    walkableCells: navigation.walkableCells,
+    walkableComponentCells: navigation.walkableComponentCells,
+    walkablePolygons: navigation.walkable.polygons.length,
+    obstacleCells: navigation.obstacleCells,
+    obstaclePolygons: navigation.obstacles.length,
   },
+  walkable: navigation.walkable,
+  obstacles: navigation.obstacles,
   segments,
   debugBoxes,
 }
@@ -426,3 +765,5 @@ console.log(`triangles: ${Math.round(extracted.triangles)}`)
 console.log(`kept vertical triangles: ${extracted.keptTriangles}`)
 console.log(`segments: ${rawSegments.length} raw -> ${segments.length} merged`)
 console.log(`debug boxes: ${debugBoxes.length}`)
+console.log(`walkable polygons: ${navigation.walkable.polygons.length} (${navigation.walkableComponentCells} cells)`)
+console.log(`obstacle polygons: ${navigation.obstacles.length} (${navigation.obstacleCells} cells)`)
