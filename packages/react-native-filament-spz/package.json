@@ -8,7 +8,7 @@
   "scripts": {
     "check:spz-material": "node bin/compile-spz-material.mjs --check",
     "compile:spz-material": "node bin/compile-spz-material.mjs",
-    "compile:spz-material:maven": "node bin/compile-spz-material.mjs --download-maven-matc --filament-version 1.72.0",
+    "compile:spz-material:maven": "node bin/compile-spz-material.mjs --download-maven-matc --filament-version 1.50.0",
     "diagnose:matc": "node bin/compile-spz-material.mjs --diagnose-matc",
     "typescript": "tsc --noEmit"
   },

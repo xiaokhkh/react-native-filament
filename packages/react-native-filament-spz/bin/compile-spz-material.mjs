@@ -47,7 +47,7 @@ Options:
 Examples:
   MATC=/path/to/filament/out/cmake-release/tools/matc/matc compile-spz-material
   compile-spz-material --download-tools --filament-version v1.64.0
-  compile-spz-material --download-maven-matc --filament-version 1.72.0
+  compile-spz-material --download-maven-matc --filament-version 1.50.0
 `)
 }
 

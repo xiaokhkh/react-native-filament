@@ -33,7 +33,7 @@ jobs:
         run: |
           node packages/react-native-filament-spz/bin/compile-spz-material.mjs \
             --download-maven-matc \
-            --filament-version 1.72.0
+            --filament-version 1.50.0
 
       - name: Upload compiled material
         uses: actions/upload-artifact@v4
