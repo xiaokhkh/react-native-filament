@@ -19,8 +19,14 @@ on:
 
 jobs:
   compile:
-    name: Compile Filament material
+    name: Compile Filament material (${{ matrix.filament-version }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        filament-version:
+          - v1.60.0
+          - v1.71.6
     steps:
       - uses: actions/checkout@v4
 
@@ -33,12 +39,12 @@ jobs:
         run: |
           node packages/react-native-filament-spz/bin/compile-spz-material.mjs \
             --download-tools \
-            --filament-version v1.50.0
+            --filament-version ${{ matrix.filament-version }}
 
       - name: Upload compiled material
         uses: actions/upload-artifact@v4
         with:
-          name: spz-gaussian-splat-filamat
+          name: spz-gaussian-splat-filamat-${{ matrix.filament-version }}
           path: package/assets/spz_gaussian_splat.filamat
           if-no-files-found: error
 
