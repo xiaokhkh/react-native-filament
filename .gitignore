@@ -3,6 +3,7 @@
 .DS_Store
 .vscode
 bullet3/
+.codex_tmp/
 .idea/
 node_modules/
 
@@ -13,5 +14,6 @@ examples/Shared/assets/*.spz
 examples/Shared/assets/*collision*
 examples/Shared/assets/character_ball.*
 examples/Shared/assets/spz_gaussian_splat.*
+!examples/Shared/assets/spz_gaussian_splat.filamat
 examples/Shared/src/generated/*
 !examples/Shared/src/generated/beloSpzCollision.ts

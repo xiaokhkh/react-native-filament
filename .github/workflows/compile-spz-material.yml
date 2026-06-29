@@ -1,0 +1,46 @@
+name: Compile SPZ Material
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/compile-spz-material.yml"
+      - "package/assets/spz_gaussian_splat.mat"
+      - "package/assets/spz_gaussian_splat.filamat"
+      - "packages/react-native-filament-spz/bin/compile-spz-material.mjs"
+      - "packages/react-native-filament-spz/package.json"
+  pull_request:
+    paths:
+      - ".github/workflows/compile-spz-material.yml"
+      - "package/assets/spz_gaussian_splat.mat"
+      - "package/assets/spz_gaussian_splat.filamat"
+      - "packages/react-native-filament-spz/bin/compile-spz-material.mjs"
+      - "packages/react-native-filament-spz/package.json"
+
+jobs:
+  compile:
+    name: Compile Filament material
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Compile SPZ material
+        run: |
+          node packages/react-native-filament-spz/bin/compile-spz-material.mjs \
+            --download-maven-matc \
+            --filament-version 1.72.0
+
+      - name: Upload compiled material
+        uses: actions/upload-artifact@v4
+        with:
+          name: spz-gaussian-splat-filamat
+          path: package/assets/spz_gaussian_splat.filamat
+          if-no-files-found: error
+
+      - name: Verify compiled material is committed
+        run: git diff --exit-code -- package/assets/spz_gaussian_splat.filamat

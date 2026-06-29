@@ -5,7 +5,7 @@ import { useFilamentContext } from './useFilamentContext'
 import { useWorkletEffect } from './useWorkletEffect'
 import { BulletAPI } from '../bullet/bulletApi'
 import { useRigidBody } from '../bullet/hooks/useRigidBody'
-import { Box, Entity, GaussianSplatAsset, GaussianSplatCollision } from '../types'
+import { Box, Entity, GaussianSplatAsset, GaussianSplatCollision, GaussianSplatRenderOptions } from '../types'
 import { RigidBody } from '../bullet'
 import DefaultGaussianSplatMaterial from '../../assets/spz_gaussian_splat.filamat'
 
@@ -53,6 +53,12 @@ export interface UseGaussianSplatConfigParams {
   flipY?: boolean
 
   /**
+   * Runtime material parameters that control the Gaussian projection and alpha falloff.
+   * These are intentionally separate from splatScale, which changes decoded radii.
+   */
+  renderOptions?: GaussianSplatRenderOptions
+
+  /**
    * Creates a static Bullet box collision body from the decoded SPZ bounds.
    */
   collision?: GaussianSplatCollision
@@ -79,8 +85,21 @@ export function useGaussianSplat(source: BufferSource, props?: UseGaussianSplatC
     metricScaleFactor,
     groundPlaneOffset,
     flipY,
+    renderOptions,
     collision = false,
   } = props ?? {}
+  const maxStdDev = renderOptions?.maxStdDev
+  const minPixelRadius = renderOptions?.minPixelRadius
+  const maxPixelRadius = renderOptions?.maxPixelRadius
+  const preBlurAmount = renderOptions?.preBlurAmount
+  const blurAmount = renderOptions?.blurAmount
+  const minAlpha = renderOptions?.minAlpha
+  const alphaGain = renderOptions?.alphaGain
+  const focalAdjustment = renderOptions?.focalAdjustment
+  const falloffGain = renderOptions?.falloffGain
+  const clipXY = renderOptions?.clipXY
+  const highAlphaMax = renderOptions?.highAlphaMax
+  const highAlphaStdDevBoost = renderOptions?.highAlphaStdDevBoost
   const { engine, scene, workletContext } = useFilamentContext()
   const spzBuffer = useBuffer({ source, releaseOnUnmount: false })
   const materialBuffer = useBuffer({ source: DefaultGaussianSplatMaterial })
@@ -109,6 +128,27 @@ export function useGaussianSplat(source: BufferSource, props?: UseGaussianSplatC
       'worklet'
       scene.removeEntity(entity)
     }
+  })
+
+  useWorkletEffect(() => {
+    'worklet'
+    if (splat == null) return
+    if (typeof splat.setRenderOptions !== 'function') return
+
+    splat.setRenderOptions(
+      maxStdDev,
+      minPixelRadius,
+      maxPixelRadius,
+      preBlurAmount,
+      blurAmount,
+      minAlpha,
+      alphaGain,
+      focalAdjustment,
+      falloffGain,
+      highAlphaMax,
+      highAlphaStdDevBoost,
+      clipXY
+    )
   })
 
   const boundingBox = useMemo(() => {

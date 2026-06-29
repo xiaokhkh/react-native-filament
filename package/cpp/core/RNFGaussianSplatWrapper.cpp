@@ -88,6 +88,19 @@ float normalizedGroundPlaneOffset(std::optional<double> groundPlaneOffset) {
   return std::isfinite(offset) ? offset : DEFAULT_GROUND_PLANE_OFFSET;
 }
 
+float finiteOr(std::optional<double> value, float fallback) {
+  if (!value.has_value()) {
+    return fallback;
+  }
+
+  const float parsed = static_cast<float>(value.value());
+  return std::isfinite(parsed) ? parsed : fallback;
+}
+
+float minValueOr(std::optional<double> value, float fallback, float minValue) {
+  return std::max(finiteOr(value, fallback), minValue);
+}
+
 float3 transformSpzPosition(const float3& value, const GaussianSplatWorldTransform& transform) {
   const float s = transform.metricScaleFactor;
   if (transform.flipY) {
@@ -102,6 +115,20 @@ float3 transformSpzDirection(const float3& value, const GaussianSplatWorldTransf
     return {value.x * s, -value.y * s, -value.z * s};
   }
   return value * s;
+}
+
+bool hasParameter(MaterialInstance* materialInstance, const char* name) {
+  if (materialInstance == nullptr || materialInstance->getMaterial() == nullptr) {
+    return false;
+  }
+  return materialInstance->getMaterial()->hasParameter(name);
+}
+
+void setFloatParameterIfPresent(MaterialInstance* materialInstance, const char* name, float value) {
+  if (!hasParameter(materialInstance, name)) {
+    return;
+  }
+  materialInstance->setParameter(name, value);
 }
 
 } // namespace
@@ -228,12 +255,43 @@ void GaussianSplatResource::setRenderSize(double width, double height) {
   _materialInstance->setParameter("renderSize", float2({safeWidth, safeHeight}));
 }
 
+void GaussianSplatResource::setRenderOptions(std::optional<double> maxStdDev, std::optional<double> minPixelRadius,
+                                             std::optional<double> maxPixelRadius, std::optional<double> preBlurAmount,
+                                             std::optional<double> blurAmount, std::optional<double> minAlpha,
+                                             std::optional<double> alphaGain, std::optional<double> focalAdjustment,
+                                             std::optional<double> falloffGain, std::optional<double> highAlphaMax,
+                                             std::optional<double> highAlphaStdDevBoost, std::optional<double> clipXY) {
+  _renderOptions.maxStdDev = minValueOr(maxStdDev, _renderOptions.maxStdDev, 0.000001f);
+  _renderOptions.minPixelRadius = minValueOr(minPixelRadius, _renderOptions.minPixelRadius, 0.0f);
+  _renderOptions.maxPixelRadius = minValueOr(maxPixelRadius, _renderOptions.maxPixelRadius, 1.0f);
+  _renderOptions.preBlurAmount = minValueOr(preBlurAmount, _renderOptions.preBlurAmount, 0.0f);
+  _renderOptions.blurAmount = minValueOr(blurAmount, _renderOptions.blurAmount, 0.0f);
+  _renderOptions.minAlpha = minValueOr(minAlpha, _renderOptions.minAlpha, 0.0f);
+  _renderOptions.alphaGain = minValueOr(alphaGain, _renderOptions.alphaGain, 0.0f);
+  _renderOptions.focalAdjustment = minValueOr(focalAdjustment, _renderOptions.focalAdjustment, 0.000001f);
+  _renderOptions.falloffGain = minValueOr(falloffGain, _renderOptions.falloffGain, 0.0f);
+  _renderOptions.clipXY = minValueOr(clipXY, _renderOptions.clipXY, 1.0f);
+  _renderOptions.highAlphaMax = minValueOr(highAlphaMax, _renderOptions.highAlphaMax, 1.0f);
+  _renderOptions.highAlphaStdDevBoost = minValueOr(highAlphaStdDevBoost, _renderOptions.highAlphaStdDevBoost, 0.0f);
+  applyRenderOptions();
+}
+
+bool GaussianSplatResource::supportsRenderOptions() const {
+  return _materialInstance != nullptr && hasParameter(_materialInstance, "maxStdDev") &&
+         hasParameter(_materialInstance, "minPixelRadius") && hasParameter(_materialInstance, "maxPixelRadius") &&
+         hasParameter(_materialInstance, "preBlurAmount") && hasParameter(_materialInstance, "blurAmount") &&
+         hasParameter(_materialInstance, "minAlpha") && hasParameter(_materialInstance, "alphaGain") &&
+         hasParameter(_materialInstance, "focalAdjustment") && hasParameter(_materialInstance, "falloffGain") &&
+         hasParameter(_materialInstance, "clipXY") && hasParameter(_materialInstance, "highAlphaMax") &&
+         hasParameter(_materialInstance, "highAlphaStdDevBoost");
+}
+
 void GaussianSplatResource::sortByView(std::vector<double> cameraPosition, std::vector<double> cameraTarget) {
   if (_indexBuffer == nullptr || _splatCenters.empty()) {
     return;
   }
 
-  (void)cameraTarget;
+  static_cast<void>(cameraTarget);
   const float3 eye = vecFromJs(cameraPosition, "cameraPosition");
   std::vector<std::pair<float, uint32_t>> order;
   order.reserve(_splatCenters.size());
@@ -267,6 +325,25 @@ Material* GaussianSplatResource::createMaterial(std::shared_ptr<FilamentBuffer> 
   }
 
   return Material::Builder().package(buffer->getData(), buffer->getSize()).build(*_engine);
+}
+
+void GaussianSplatResource::applyRenderOptions() {
+  if (_materialInstance == nullptr) {
+    return;
+  }
+
+  setFloatParameterIfPresent(_materialInstance, "maxStdDev", _renderOptions.maxStdDev);
+  setFloatParameterIfPresent(_materialInstance, "minPixelRadius", _renderOptions.minPixelRadius);
+  setFloatParameterIfPresent(_materialInstance, "maxPixelRadius", _renderOptions.maxPixelRadius);
+  setFloatParameterIfPresent(_materialInstance, "preBlurAmount", _renderOptions.preBlurAmount);
+  setFloatParameterIfPresent(_materialInstance, "blurAmount", _renderOptions.blurAmount);
+  setFloatParameterIfPresent(_materialInstance, "minAlpha", _renderOptions.minAlpha);
+  setFloatParameterIfPresent(_materialInstance, "alphaGain", _renderOptions.alphaGain);
+  setFloatParameterIfPresent(_materialInstance, "focalAdjustment", _renderOptions.focalAdjustment);
+  setFloatParameterIfPresent(_materialInstance, "falloffGain", _renderOptions.falloffGain);
+  setFloatParameterIfPresent(_materialInstance, "clipXY", _renderOptions.clipXY);
+  setFloatParameterIfPresent(_materialInstance, "highAlphaMax", _renderOptions.highAlphaMax);
+  setFloatParameterIfPresent(_materialInstance, "highAlphaStdDevBoost", _renderOptions.highAlphaStdDevBoost);
 }
 
 void GaussianSplatResource::buildRenderable(const DecodedSpzCloud& cloud, std::shared_ptr<FilamentBuffer> materialBuffer,
@@ -369,6 +446,7 @@ void GaussianSplatResource::buildRenderable(const DecodedSpzCloud& cloud, std::s
   _materialInstance->setParameter("cameraUp", float3({0.0f, 1.0f, 0.0f}));
   _materialInstance->setParameter("cameraForward", float3({0.0f, 0.0f, -1.0f}));
   _materialInstance->setParameter("renderSize", float2({1.0f, 1.0f}));
+  applyRenderOptions();
 
   RenderableManager::Builder builder(1);
   const RenderableManager::Builder::Result result =
@@ -393,9 +471,11 @@ void GaussianSplatWrapper::loadHybridMethods() {
   registerHybridMethod("getBoundingBox", &GaussianSplatWrapper::getBoundingBox, this);
   registerHybridMethod("setCameraView", &GaussianSplatWrapper::setCameraView, this);
   registerHybridMethod("setRenderSize", &GaussianSplatWrapper::setRenderSize, this);
+  registerHybridMethod("setRenderOptions", &GaussianSplatWrapper::setRenderOptions, this);
   registerHybridMethod("sortByView", &GaussianSplatWrapper::sortByView, this);
   registerHybridGetter("pointCount", &GaussianSplatWrapper::getPointCount, this);
   registerHybridGetter("renderedPointCount", &GaussianSplatWrapper::getRenderedPointCount, this);
+  registerHybridGetter("supportsRenderOptions", &GaussianSplatWrapper::getSupportsRenderOptions, this);
 }
 
 std::shared_ptr<EntityWrapper> GaussianSplatWrapper::getEntity() {
@@ -423,8 +503,22 @@ void GaussianSplatWrapper::setRenderSize(double width, double height) {
   pointee()->setRenderSize(width, height);
 }
 
+void GaussianSplatWrapper::setRenderOptions(std::optional<double> maxStdDev, std::optional<double> minPixelRadius,
+                                            std::optional<double> maxPixelRadius, std::optional<double> preBlurAmount,
+                                            std::optional<double> blurAmount, std::optional<double> minAlpha,
+                                            std::optional<double> alphaGain, std::optional<double> focalAdjustment,
+                                            std::optional<double> falloffGain, std::optional<double> highAlphaMax,
+                                            std::optional<double> highAlphaStdDevBoost, std::optional<double> clipXY) {
+  pointee()->setRenderOptions(maxStdDev, minPixelRadius, maxPixelRadius, preBlurAmount, blurAmount, minAlpha, alphaGain, focalAdjustment,
+                              falloffGain, highAlphaMax, highAlphaStdDevBoost, clipXY);
+}
+
 void GaussianSplatWrapper::sortByView(std::vector<double> cameraPosition, std::vector<double> cameraTarget) {
   pointee()->sortByView(cameraPosition, cameraTarget);
+}
+
+bool GaussianSplatWrapper::getSupportsRenderOptions() {
+  return pointee()->supportsRenderOptions();
 }
 
 } // namespace margelo

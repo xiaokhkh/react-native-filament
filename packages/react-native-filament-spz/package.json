@@ -5,7 +5,15 @@
   "description": "SPZ tooling, collision helpers, and scene utilities for react-native-filament.",
   "main": "src/index.ts",
   "types": "src/index.ts",
+  "scripts": {
+    "check:spz-material": "node bin/compile-spz-material.mjs --check",
+    "compile:spz-material": "node bin/compile-spz-material.mjs",
+    "compile:spz-material:maven": "node bin/compile-spz-material.mjs --download-maven-matc --filament-version 1.72.0",
+    "diagnose:matc": "node bin/compile-spz-material.mjs --diagnose-matc",
+    "typescript": "tsc --noEmit"
+  },
   "bin": {
+    "compile-spz-material": "bin/compile-spz-material.mjs",
     "generate-spz-mobile-collision": "bin/generate-spz-mobile-collision.mjs"
   },
   "files": [

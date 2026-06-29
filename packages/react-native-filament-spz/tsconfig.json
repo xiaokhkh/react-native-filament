@@ -1,0 +1,11 @@
+{
+  "extends": "../../package/tsconfig",
+  "compilerOptions": {
+    "noUncheckedIndexedAccess": false,
+    "paths": {
+      "react-native-filament": ["../../package/src/index"]
+    }
+  },
+  "include": ["src"],
+  "exclude": ["node_modules"]
+}
