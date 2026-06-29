@@ -106,14 +106,8 @@ material {
         custom4
     ],
     variables : [
-        {
-            name : splatColor,
-            precision : high
-        },
-        {
-            name : splatUv,
-            precision : high
-        }
+        splatColor,
+        splatUv
     ]
 }
 
