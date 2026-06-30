@@ -348,6 +348,29 @@ function releasePlatformToken() {
   throw new Error(`--download-tools is only supported on macOS and Linux, current platform is ${process.platform}`)
 }
 
+function releaseAssetScore(name) {
+  const normalizedName = name.toLowerCase()
+  if (!normalizedName.endsWith('.tgz')) return Number.NEGATIVE_INFINITY
+
+  if (process.platform === 'darwin') {
+    if (!normalizedName.includes('mac')) return Number.NEGATIVE_INFINITY
+    if (process.arch === 'arm64' && normalizedName.includes('arm64')) return 40
+    if (process.arch === 'x64' && normalizedName.includes('x86_64')) return 40
+    return 20
+  }
+
+  if (process.platform === 'linux') {
+    if (!normalizedName.includes('linux')) return Number.NEGATIVE_INFINITY
+    if (process.arch === 'x64' && normalizedName.includes('arm-linux')) return Number.NEGATIVE_INFINITY
+    if (process.arch === 'arm64' && !normalizedName.includes('arm-linux')) return Number.NEGATIVE_INFINITY
+    if (process.arch === 'x64' && normalizedName.includes('x86_64')) return 40
+    if (process.arch === 'arm64' && normalizedName.includes('arm-linux')) return 40
+    return 20
+  }
+
+  return Number.NEGATIVE_INFINITY
+}
+
 function normalizeFilamentVersion(version) {
   return version.startsWith('v') ? version.slice(1) : version
 }
@@ -392,12 +415,12 @@ async function downloadMatc(version) {
   const cachedMatc = findBestExecutable(cacheDir, 'matc')
   if (cachedMatc) return cachedMatc
 
-  const platformToken = releasePlatformToken()
   const assets = Array.isArray(release.assets) ? release.assets : []
-  const asset = assets.find((item) => {
-    const name = String(item.name ?? '').toLowerCase()
-    return name.endsWith('.tgz') && name.includes(platformToken)
-  })
+  const platformToken = releasePlatformToken()
+  const asset = assets
+    .map((item) => ({ item, score: releaseAssetScore(String(item.name ?? '')) }))
+    .filter(({ score }) => Number.isFinite(score))
+    .sort((a, b) => b.score - a.score || String(a.item.name ?? '').localeCompare(String(b.item.name ?? '')))[0]?.item
 
   if (!asset?.browser_download_url) {
     const names = assets.map((item) => item.name).filter(Boolean).join(', ')
