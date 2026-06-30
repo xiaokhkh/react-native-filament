@@ -351,6 +351,8 @@ function releasePlatformToken() {
 function releaseAssetScore(name) {
   const normalizedName = name.toLowerCase()
   if (!normalizedName.endsWith('.tgz')) return Number.NEGATIVE_INFINITY
+  if (normalizedName.includes('android')) return Number.NEGATIVE_INFINITY
+  if (!normalizedName.startsWith('filament-v')) return Number.NEGATIVE_INFINITY
 
   if (process.platform === 'darwin') {
     if (!normalizedName.includes('mac')) return Number.NEGATIVE_INFINITY
