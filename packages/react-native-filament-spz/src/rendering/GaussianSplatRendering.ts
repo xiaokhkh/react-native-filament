@@ -59,18 +59,19 @@ export const MOBILE_SHARP_GAUSSIAN_SPLAT_RENDERING_PRESET = {
 
 export const MOBILE_CRISP_GAUSSIAN_SPLAT_RENDERING_PRESET = {
   name: 'mobile-crisp',
-  splatScale: 0.4,
-  focalAdjustment: 1.58,
+  splatScale: 0.37,
+  focalAdjustment: 2,
   renderOptions: {
     ...SPARK_WEB_RENDER_OPTIONS,
-    maxPixelRadius: 96,
-    blurAmount: 0.004,
-    minAlpha: 0.00018,
-    focalAdjustment: 1.58,
-    falloffGain: 1.35,
-    clipXY: 1.6,
+    maxPixelRadius: 512,
+    blurAmount: 0.3,
+    minAlpha: 0.5 / 255,
+    alphaGain: 1,
+    focalAdjustment: 2,
+    falloffGain: 1,
+    clipXY: 1.4,
     highAlphaMax: 5,
-    highAlphaStdDevBoost: 0.54,
+    highAlphaStdDevBoost: 0.7,
   },
 } satisfies GaussianSplatRenderingPreset
 
